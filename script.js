@@ -20,8 +20,6 @@ items.forEach((item) => {
   item.dataset.y = '0';
 
   item.addEventListener('mousedown', (e) => {
-    e.preventDefault();
-
     isDragging = true;
     activeItem = item;
 
@@ -34,19 +32,16 @@ items.forEach((item) => {
     const containerRect = container.getBoundingClientRect();
     const itemRect = item.getBoundingClientRect();
 
-    // Distance between the item's current edges
-    // and the container's edges.
-    const leftSpace = itemRect.left - containerRect.left;
-    const rightSpace = containerRect.right - itemRect.right;
-    const topSpace = itemRect.top - containerRect.top;
-    const bottomSpace = containerRect.bottom - itemRect.bottom;
+    const left = itemRect.left - containerRect.left;
+    const top = itemRect.top - containerRect.top;
+    const right = containerRect.right - itemRect.right;
+    const bottom = containerRect.bottom - itemRect.bottom;
 
-    // Convert available space into translation limits.
-    minAllowedX = initialX - leftSpace;
-    maxAllowedX = initialX + rightSpace;
+    minAllowedX = initialX - left;
+    maxAllowedX = initialX + right;
 
-    minAllowedY = initialY - topSpace;
-    maxAllowedY = initialY + bottomSpace;
+    minAllowedY = initialY - top;
+    maxAllowedY = initialY + bottom;
 
     activeItem.style.zIndex = '1000';
   });
@@ -61,27 +56,16 @@ document.addEventListener('mousemove', (e) => {
   let targetX = initialX + deltaX;
   let targetY = initialY + deltaY;
 
-  // Keep the entire item inside the container.
-  targetX = Math.max(
-    minAllowedX,
-    Math.min(targetX, maxAllowedX)
-  );
-
-  targetY = Math.max(
-    minAllowedY,
-    Math.min(targetY, maxAllowedY)
-  );
+  targetX = Math.max(minAllowedX, Math.min(targetX, maxAllowedX));
+  targetY = Math.max(minAllowedY, Math.min(targetY, maxAllowedY));
 
   activeItem.dataset.x = targetX;
   activeItem.dataset.y = targetY;
 
-  // IMPORTANT:
-  // Preserve the original 3D transform.
-  const isEven = [...items].indexOf(activeItem) % 2 === 1;
-
-  const rotation = isEven
-    ? 'scaleX(1.31) rotateY(40deg)'
-    : 'scaleX(1.31) rotateY(-40deg)';
+  const index = Array.from(items).indexOf(activeItem);
+  const rotation = index % 2 === 0
+    ? 'scaleX(1.31) rotateY(-40deg)'
+    : 'scaleX(1.31) rotateY(40deg)';
 
   activeItem.style.transform =
     `translate(${targetX}px, ${targetY}px) ${rotation}`;
