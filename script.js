@@ -23,6 +23,7 @@ items.forEach((item) => {
     isDragging = true;
     activeItem = item;
 
+    // Read saved transform offsets
     initialX = parseFloat(item.dataset.x) || 0;
     initialY = parseFloat(item.dataset.y) || 0;
 
@@ -32,18 +33,20 @@ items.forEach((item) => {
     const containerRect = container.getBoundingClientRect();
     const itemRect = item.getBoundingClientRect();
 
-    const left = itemRect.left - containerRect.left;
-    const top = itemRect.top - containerRect.top;
-    const right = containerRect.right - itemRect.right;
-    const bottom = containerRect.bottom - itemRect.bottom;
+    // Calculate boundary constraints relative to initial transform
+    // left/top relative to container border box
+    const currentLeft = itemRect.left - containerRect.left;
+    const currentTop = itemRect.top - containerRect.top;
 
-    minAllowedX = initialX - left;
-    maxAllowedX = initialX + right;
+    // Calculate bounds based on client dimensions
+    minAllowedX = initialX - currentLeft;
+    maxAllowedX = initialX + (container.clientWidth - (currentLeft + item.offsetWidth));
 
-    minAllowedY = initialY - top;
-    maxAllowedY = initialY + bottom;
+    minAllowedY = initialY - currentTop;
+    maxAllowedY = initialY + (container.clientHeight - (currentTop + item.offsetHeight));
 
     activeItem.style.zIndex = '1000';
+    activeItem.style.willChange = 'transform';
   });
 });
 
@@ -56,26 +59,19 @@ document.addEventListener('mousemove', (e) => {
   let targetX = initialX + deltaX;
   let targetY = initialY + deltaY;
 
+  // Enforce boundary constraints
   targetX = Math.max(minAllowedX, Math.min(targetX, maxAllowedX));
   targetY = Math.max(minAllowedY, Math.min(targetY, maxAllowedY));
 
   activeItem.dataset.x = targetX;
   activeItem.dataset.y = targetY;
-
-  const index = Array.from(items).indexOf(activeItem);
-  const rotation = index % 2 === 0
-    ? 'scaleX(1.31) rotateY(-40deg)'
-    : 'scaleX(1.31) rotateY(40deg)';
-
-  activeItem.style.transform =
-    `translate(${targetX}px, ${targetY}px) ${rotation}`;
+  activeItem.style.transform = `translate(${targetX}px, ${targetY}px)`;
 });
 
 document.addEventListener('mouseup', () => {
   if (activeItem) {
     activeItem.style.zIndex = '1';
   }
-
   isDragging = false;
   activeItem = null;
 });
