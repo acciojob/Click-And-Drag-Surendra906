@@ -6,7 +6,7 @@ let isDragging = false;
 let startX = 0;
 let startY = 0;
 
-container.style.position = 'relative';
+
 
 items.forEach((item) => {
   item.addEventListener('mousedown', (e) => {
