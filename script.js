@@ -6,7 +6,7 @@ let isDragging = false;
 let startX = 0;
 let startY = 0;
 
-// Ensure container is the positioning parent
+// Set position relative on container as anchor point
 container.style.position = 'relative';
 
 items.forEach((item) => {
@@ -17,15 +17,15 @@ items.forEach((item) => {
     const containerRect = container.getBoundingClientRect();
     const itemRect = item.getBoundingClientRect();
 
-    // Calculate cursor offset inside the clicked item
+    // Offset of mouse click relative to item's top-left corner
     startX = e.clientX - itemRect.left;
     startY = e.clientY - itemRect.top;
 
-    // Get position relative to the container's inner client area (excluding borders)
+    // Calculate initial position relative to container content area
     const initialLeft = itemRect.left - containerRect.left - container.clientLeft;
     const initialTop = itemRect.top - containerRect.top - container.clientTop;
 
-    // Convert ONLY the clicked block to absolute positioning
+    // Convert to absolute positioning on drag start
     activeItem.style.position = 'absolute';
     activeItem.style.zIndex = '1000';
     activeItem.style.left = `${initialLeft}px`;
@@ -38,21 +38,19 @@ document.addEventListener('mousemove', (e) => {
 
   const containerRect = container.getBoundingClientRect();
 
-  // Calculate top and left relative to container content area
+  // Position relative to container inner top-left corner
   let left = e.clientX - containerRect.left - container.clientLeft - startX;
   let top = e.clientY - containerRect.top - container.clientTop - startY;
 
-  // Exact bounds allowed inside the container
-  const minLeft = 0;
-  const minTop = 0;
+  // Exact maximum constraints inside container width and height
   const maxLeft = container.clientWidth - activeItem.offsetWidth;
   const maxTop = container.clientHeight - activeItem.offsetHeight;
 
-  // Strict boundary clamping
-  left = Math.max(minLeft, Math.min(left, maxLeft));
-  top = Math.max(minTop, Math.min(top, maxTop));
+  // Strict boundary clamping [0, max]
+  left = Math.max(0, Math.min(left, maxLeft));
+  top = Math.max(0, Math.min(top, maxTop));
 
-  // Apply clamped coordinates to styles
+  // Update styles
   activeItem.style.left = `${left}px`;
   activeItem.style.top = `${top}px`;
 });
