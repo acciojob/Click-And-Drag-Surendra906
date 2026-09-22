@@ -3,68 +3,58 @@ const items = document.querySelectorAll('.item');
 
 let activeItem = null;
 let isDragging = false;
+let startX = 0;
+let startY = 0;
 
-let startMouseX = 0;
-let startMouseY = 0;
-
-let initialX = 0;
-let initialY = 0;
-
-let minAllowedX = 0;
-let maxAllowedX = 0;
-let minAllowedY = 0;
-let maxAllowedY = 0;
+// Ensure container is the positioning parent
+container.style.position = 'relative';
 
 items.forEach((item) => {
-  item.dataset.x = '0';
-  item.dataset.y = '0';
-
   item.addEventListener('mousedown', (e) => {
     isDragging = true;
     activeItem = item;
 
-    // Read stored transform translation coordinates
-    initialX = parseFloat(item.dataset.x) || 0;
-    initialY = parseFloat(item.dataset.y) || 0;
-
-    startMouseX = e.clientX;
-    startMouseY = e.clientY;
-
     const containerRect = container.getBoundingClientRect();
     const itemRect = item.getBoundingClientRect();
 
-    // Determine the element's original untranslated position
-    const untranslatedLeft = itemRect.left - containerRect.left - container.clientLeft - initialX;
-    const untranslatedTop = itemRect.top - containerRect.top - container.clientTop - initialY;
+    // Calculate cursor offset inside the clicked item
+    startX = e.clientX - itemRect.left;
+    startY = e.clientY - itemRect.top;
 
-    // Exact min/max translations allowed
-    minAllowedX = -untranslatedLeft;
-    maxAllowedX = container.clientWidth - item.offsetWidth - untranslatedLeft;
+    // Get position relative to the container's inner client area (excluding borders)
+    const initialLeft = itemRect.left - containerRect.left - container.clientLeft;
+    const initialTop = itemRect.top - containerRect.top - container.clientTop;
 
-    minAllowedY = -untranslatedTop;
-    maxAllowedY = container.clientHeight - item.offsetHeight - untranslatedTop;
-
+    // Convert ONLY the clicked block to absolute positioning
+    activeItem.style.position = 'absolute';
     activeItem.style.zIndex = '1000';
-    activeItem.style.willChange = 'transform';
+    activeItem.style.left = `${initialLeft}px`;
+    activeItem.style.top = `${initialTop}px`;
   });
 });
 
 document.addEventListener('mousemove', (e) => {
   if (!isDragging || !activeItem) return;
 
-  const deltaX = e.clientX - startMouseX;
-  const deltaY = e.clientY - startMouseY;
+  const containerRect = container.getBoundingClientRect();
 
-  let targetX = initialX + deltaX;
-  let targetY = initialY + deltaY;
+  // Calculate top and left relative to container content area
+  let left = e.clientX - containerRect.left - container.clientLeft - startX;
+  let top = e.clientY - containerRect.top - container.clientTop - startY;
+
+  // Exact bounds allowed inside the container
+  const minLeft = 0;
+  const minTop = 0;
+  const maxLeft = container.clientWidth - activeItem.offsetWidth;
+  const maxTop = container.clientHeight - activeItem.offsetHeight;
 
   // Strict boundary clamping
-  targetX = Math.max(minAllowedX, Math.min(targetX, maxAllowedX));
-  targetY = Math.max(minAllowedY, Math.min(targetY, maxAllowedY));
+  left = Math.max(minLeft, Math.min(left, maxLeft));
+  top = Math.max(minTop, Math.min(top, maxTop));
 
-  activeItem.dataset.x = targetX;
-  activeItem.dataset.y = targetY;
-  activeItem.style.transform = `translate(${targetX}px, ${targetY}px)`;
+  // Apply clamped coordinates to styles
+  activeItem.style.left = `${left}px`;
+  activeItem.style.top = `${top}px`;
 });
 
 document.addEventListener('mouseup', () => {
