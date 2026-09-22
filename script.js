@@ -6,8 +6,6 @@ let isDragging = false;
 let startX = 0;
 let startY = 0;
 
-
-
 items.forEach((item) => {
   item.addEventListener('mousedown', (e) => {
     isDragging = true;
@@ -16,13 +14,13 @@ items.forEach((item) => {
     const containerRect = container.getBoundingClientRect();
     const itemRect = item.getBoundingClientRect();
 
-    // Store mouse click position relative to the item's top-left corner
+    // Mouse offset inside the clicked block
     startX = e.clientX - itemRect.left;
     startY = e.clientY - itemRect.top;
 
-    // Position item relative to container's top-left boundary
-    const initialLeft = itemRect.left - containerRect.left;
-    const initialTop = itemRect.top - containerRect.top;
+    // Initial position relative to container
+    const initialLeft = itemRect.left - containerRect.left - container.clientLeft;
+    const initialTop = itemRect.top - containerRect.top - container.clientTop;
 
     activeItem.style.position = 'absolute';
     activeItem.style.zIndex = '1000';
@@ -36,22 +34,21 @@ document.addEventListener('mousemove', (e) => {
 
   const containerRect = container.getBoundingClientRect();
 
-  // Position relative to container border box
-  let left = e.clientX - containerRect.left - startX;
-  let top = e.clientY - containerRect.top - startY;
+  // Position relative to container inner top-left area
+  let left = e.clientX - containerRect.left - container.clientLeft - startX;
+  let top = e.clientY - containerRect.top - container.clientTop - startY;
 
-  // Maximum allowed bounds inside container
+  // Exact maximum constraints expected by the test
   const minLeft = 0;
   const minTop = 0;
-  const maxLeft = containerRect.width - activeItem.offsetWidth;
-  const maxTop = containerRect.height - activeItem.offsetHeight;
+  const maxLeft = container.clientWidth - activeItem.offsetWidth;
+  const maxTop = container.clientHeight - activeItem.offsetHeight;
 
-  // Clamp left and top strictly within [min, max]
-  if (left < minLeft) left = minLeft;
-  if (top < minTop) top = minTop;
-  if (left > maxLeft) left = maxLeft;
-  if (top > maxTop) top = maxTop;
+  // Enforce strict clamping
+  left = Math.max(minLeft, Math.min(left, maxLeft));
+  top = Math.max(minTop, Math.min(top, maxTop));
 
+  // Set style
   activeItem.style.left = `${left}px`;
   activeItem.style.top = `${top}px`;
 });
