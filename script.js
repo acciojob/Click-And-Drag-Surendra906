@@ -6,6 +6,7 @@ let isDragging = false;
 let startX = 0;
 let startY = 0;
 
+// Ensure container acts as the positioning anchor for absolute children
 container.style.position = 'relative';
 
 items.forEach((item) => {
@@ -16,18 +17,19 @@ items.forEach((item) => {
     const containerRect = container.getBoundingClientRect();
     const itemRect = item.getBoundingClientRect();
 
-    // Mouse offset inside the dragged item
+    // Store offset where the click occurred inside the cube
     startX = e.clientX - itemRect.left;
     startY = e.clientY - itemRect.top;
 
-    // Calculate current position relative to container padding area
-    const initialLeft = itemRect.left - containerRect.left - container.clientLeft;
-    const initialTop = itemRect.top - containerRect.top - container.clientTop;
+    // Calculate current position relative to container's content area
+    const currentLeft = itemRect.left - containerRect.left;
+    const currentTop = itemRect.top - containerRect.top;
 
-    item.style.position = 'absolute';
-    item.style.zIndex = '1000';
-    item.style.left = `${initialLeft}px`;
-    item.style.top = `${initialTop}px`;
+    // Convert ONLY the clicked item to absolute position so grid stays intact
+    activeItem.style.position = 'absolute';
+    activeItem.style.zIndex = '1000';
+    activeItem.style.left = `${currentLeft}px`;
+    activeItem.style.top = `${currentTop}px`;
   });
 });
 
@@ -36,18 +38,19 @@ document.addEventListener('mousemove', (e) => {
 
   const containerRect = container.getBoundingClientRect();
 
-  // Position relative to container inner top-left
-  let left = e.clientX - containerRect.left - container.clientLeft - startX;
-  let top = e.clientY - containerRect.top - container.clientTop - startY;
+  // Calculate top/left relative to container border box
+  let left = e.clientX - containerRect.left - startX;
+  let top = e.clientY - containerRect.top - startY;
 
-  // Maximum allowed movement based on container scrollable/inner dimensions
+  // Exact maximum coordinates to prevent spilling outside container bounds
   const maxLeft = container.clientWidth - activeItem.offsetWidth;
   const maxTop = container.clientHeight - activeItem.offsetHeight;
 
-  // Enforce boundary clamping [0, max]
+  // Strict boundary clamping
   left = Math.max(0, Math.min(left, maxLeft));
   top = Math.max(0, Math.min(top, maxTop));
 
+  // Apply clamped coordinates
   activeItem.style.left = `${left}px`;
   activeItem.style.top = `${top}px`;
 });
