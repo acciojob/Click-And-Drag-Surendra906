@@ -34,7 +34,6 @@ body {
   position: relative;
   background: rgba(255,255,255,0.1);
   font-size: 0;
-  perspective: 500px;
 }
 
 .items.active {

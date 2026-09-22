@@ -1,4 +1,3 @@
-// Your code here.
 const container = document.querySelector('.items');
 const items = document.querySelectorAll('.item');
 
@@ -17,15 +16,16 @@ items.forEach((item) => {
     const containerRect = container.getBoundingClientRect();
     const itemRect = item.getBoundingClientRect();
 
+    // Mouse offset inside the dragged item
     startX = e.clientX - itemRect.left;
     startY = e.clientY - itemRect.top;
 
+    // Calculate current position relative to container padding area
+    const initialLeft = itemRect.left - containerRect.left - container.clientLeft;
+    const initialTop = itemRect.top - containerRect.top - container.clientTop;
+
     item.style.position = 'absolute';
     item.style.zIndex = '1000';
-
-    const initialLeft = itemRect.left - containerRect.left;
-    const initialTop = itemRect.top - containerRect.top;
-
     item.style.left = `${initialLeft}px`;
     item.style.top = `${initialTop}px`;
   });
@@ -36,12 +36,15 @@ document.addEventListener('mousemove', (e) => {
 
   const containerRect = container.getBoundingClientRect();
 
-  let left = e.clientX - containerRect.left - startX;
-  let top = e.clientY - containerRect.top - startY;
+  // Position relative to container inner top-left
+  let left = e.clientX - containerRect.left - container.clientLeft - startX;
+  let top = e.clientY - containerRect.top - container.clientTop - startY;
 
+  // Maximum allowed movement based on container scrollable/inner dimensions
   const maxLeft = container.clientWidth - activeItem.offsetWidth;
   const maxTop = container.clientHeight - activeItem.offsetHeight;
 
+  // Enforce boundary clamping [0, max]
   left = Math.max(0, Math.min(left, maxLeft));
   top = Math.max(0, Math.min(top, maxTop));
 
