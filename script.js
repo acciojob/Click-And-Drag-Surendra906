@@ -23,7 +23,7 @@ items.forEach((item) => {
     isDragging = true;
     activeItem = item;
 
-    // Read saved transform offsets
+    // Read stored transform translation coordinates
     initialX = parseFloat(item.dataset.x) || 0;
     initialY = parseFloat(item.dataset.y) || 0;
 
@@ -33,17 +33,16 @@ items.forEach((item) => {
     const containerRect = container.getBoundingClientRect();
     const itemRect = item.getBoundingClientRect();
 
-    // Calculate boundary constraints relative to initial transform
-    // left/top relative to container border box
-    const currentLeft = itemRect.left - containerRect.left;
-    const currentTop = itemRect.top - containerRect.top;
+    // Determine the element's original untranslated position
+    const untranslatedLeft = itemRect.left - containerRect.left - container.clientLeft - initialX;
+    const untranslatedTop = itemRect.top - containerRect.top - container.clientTop - initialY;
 
-    // Calculate bounds based on client dimensions
-    minAllowedX = initialX - currentLeft;
-    maxAllowedX = initialX + (container.clientWidth - (currentLeft + item.offsetWidth));
+    // Exact min/max translations allowed
+    minAllowedX = -untranslatedLeft;
+    maxAllowedX = container.clientWidth - item.offsetWidth - untranslatedLeft;
 
-    minAllowedY = initialY - currentTop;
-    maxAllowedY = initialY + (container.clientHeight - (currentTop + item.offsetHeight));
+    minAllowedY = -untranslatedTop;
+    maxAllowedY = container.clientHeight - item.offsetHeight - untranslatedTop;
 
     activeItem.style.zIndex = '1000';
     activeItem.style.willChange = 'transform';
@@ -59,7 +58,7 @@ document.addEventListener('mousemove', (e) => {
   let targetX = initialX + deltaX;
   let targetY = initialY + deltaY;
 
-  // Enforce boundary constraints
+  // Strict boundary clamping
   targetX = Math.max(minAllowedX, Math.min(targetX, maxAllowedX));
   targetY = Math.max(minAllowedY, Math.min(targetY, maxAllowedY));
 
