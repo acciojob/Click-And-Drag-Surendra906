@@ -20,6 +20,8 @@ items.forEach((item) => {
   item.dataset.y = '0';
 
   item.addEventListener('mousedown', (e) => {
+    e.preventDefault();
+
     isDragging = true;
     activeItem = item;
 
@@ -32,20 +34,21 @@ items.forEach((item) => {
     const containerRect = container.getBoundingClientRect();
     const itemRect = item.getBoundingClientRect();
 
-    // 1. Measure current distances from the item edges to container edges
-    const currentLeft = itemRect.left - containerRect.left;
-    const currentTop = itemRect.top - containerRect.top;
-    const currentRight = containerRect.right - itemRect.right;
-    const currentBottom = containerRect.bottom - itemRect.bottom;
+    // Distance between the item's current edges
+    // and the container's edges.
+    const leftSpace = itemRect.left - containerRect.left;
+    const rightSpace = containerRect.right - itemRect.right;
+    const topSpace = itemRect.top - containerRect.top;
+    const bottomSpace = containerRect.bottom - itemRect.bottom;
 
-    // 2. Compute exact translate limits based on initial position + available room
-    minAllowedX = initialX - currentLeft;
-    maxAllowedX = initialX + currentRight;
-    minAllowedY = initialY - currentTop;
-    maxAllowedY = initialY + currentBottom;
+    // Convert available space into translation limits.
+    minAllowedX = initialX - leftSpace;
+    maxAllowedX = initialX + rightSpace;
+
+    minAllowedY = initialY - topSpace;
+    maxAllowedY = initialY + bottomSpace;
 
     activeItem.style.zIndex = '1000';
-    activeItem.style.willChange = 'transform';
   });
 });
 
@@ -58,19 +61,37 @@ document.addEventListener('mousemove', (e) => {
   let targetX = initialX + deltaX;
   let targetY = initialY + deltaY;
 
-  // 3. Strictly clamp within allowed boundaries
-  targetX = Math.max(minAllowedX, Math.min(targetX, maxAllowedX));
-  targetY = Math.max(minAllowedY, Math.min(targetY, maxAllowedY));
+  // Keep the entire item inside the container.
+  targetX = Math.max(
+    minAllowedX,
+    Math.min(targetX, maxAllowedX)
+  );
+
+  targetY = Math.max(
+    minAllowedY,
+    Math.min(targetY, maxAllowedY)
+  );
 
   activeItem.dataset.x = targetX;
   activeItem.dataset.y = targetY;
-  activeItem.style.transform = `translate(${targetX}px, ${targetY}px)`;
+
+  // IMPORTANT:
+  // Preserve the original 3D transform.
+  const isEven = [...items].indexOf(activeItem) % 2 === 1;
+
+  const rotation = isEven
+    ? 'scaleX(1.31) rotateY(40deg)'
+    : 'scaleX(1.31) rotateY(-40deg)';
+
+  activeItem.style.transform =
+    `translate(${targetX}px, ${targetY}px) ${rotation}`;
 });
 
 document.addEventListener('mouseup', () => {
   if (activeItem) {
     activeItem.style.zIndex = '1';
   }
+
   isDragging = false;
   activeItem = null;
 });
