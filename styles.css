@@ -23,9 +23,9 @@ body {
   padding: 100px;
   width: 100%;
   border: 1px solid white;
-  overflow-x: scroll;
-  overflow-y: hidden;
-  white-space: nowrap;
+ display:flex;
+	flex-wrap:wrap;
+	gap:20px;
   user-select: none;
   cursor: pointer;
   transition: all 0.2s;
