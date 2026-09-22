@@ -6,7 +6,6 @@ let isDragging = false;
 let startX = 0;
 let startY = 0;
 
-// Set position relative on container as anchor point
 container.style.position = 'relative';
 
 items.forEach((item) => {
@@ -17,15 +16,14 @@ items.forEach((item) => {
     const containerRect = container.getBoundingClientRect();
     const itemRect = item.getBoundingClientRect();
 
-    // Offset of mouse click relative to item's top-left corner
+    // Store mouse click position relative to the item's top-left corner
     startX = e.clientX - itemRect.left;
     startY = e.clientY - itemRect.top;
 
-    // Calculate initial position relative to container content area
-    const initialLeft = itemRect.left - containerRect.left - container.clientLeft;
-    const initialTop = itemRect.top - containerRect.top - container.clientTop;
+    // Position item relative to container's top-left boundary
+    const initialLeft = itemRect.left - containerRect.left;
+    const initialTop = itemRect.top - containerRect.top;
 
-    // Convert to absolute positioning on drag start
     activeItem.style.position = 'absolute';
     activeItem.style.zIndex = '1000';
     activeItem.style.left = `${initialLeft}px`;
@@ -38,19 +36,22 @@ document.addEventListener('mousemove', (e) => {
 
   const containerRect = container.getBoundingClientRect();
 
-  // Position relative to container inner top-left corner
-  let left = e.clientX - containerRect.left - container.clientLeft - startX;
-  let top = e.clientY - containerRect.top - container.clientTop - startY;
+  // Position relative to container border box
+  let left = e.clientX - containerRect.left - startX;
+  let top = e.clientY - containerRect.top - startY;
 
-  // Exact maximum constraints inside container width and height
-  const maxLeft = container.clientWidth - activeItem.offsetWidth;
-  const maxTop = container.clientHeight - activeItem.offsetHeight;
+  // Maximum allowed bounds inside container
+  const minLeft = 0;
+  const minTop = 0;
+  const maxLeft = containerRect.width - activeItem.offsetWidth;
+  const maxTop = containerRect.height - activeItem.offsetHeight;
 
-  // Strict boundary clamping [0, max]
-  left = Math.max(0, Math.min(left, maxLeft));
-  top = Math.max(0, Math.min(top, maxTop));
+  // Clamp left and top strictly within [min, max]
+  if (left < minLeft) left = minLeft;
+  if (top < minTop) top = minTop;
+  if (left > maxLeft) left = maxLeft;
+  if (top > maxTop) top = maxTop;
 
-  // Update styles
   activeItem.style.left = `${left}px`;
   activeItem.style.top = `${top}px`;
 });
