@@ -3,33 +3,36 @@ const items = document.querySelectorAll('.item');
 
 let activeItem = null;
 let isDragging = false;
-let startX = 0;
-let startY = 0;
 
-// Ensure container acts as the positioning anchor for absolute children
-container.style.position = 'relative';
+// Initial cursor coordinates when click starts
+let startMouseX = 0;
+let startMouseY = 0;
+
+// Current translation values of active item
+let currentX = 0;
+let currentY = 0;
+let initialX = 0;
+let initialY = 0;
 
 items.forEach((item) => {
+  // Store cumulative translation offsets on the element
+  item.dataset.x = '0';
+  item.dataset.y = '0';
+
   item.addEventListener('mousedown', (e) => {
     isDragging = true;
     activeItem = item;
 
-    const containerRect = container.getBoundingClientRect();
-    const itemRect = item.getBoundingClientRect();
+    // Read stored translations or default to 0
+    initialX = parseFloat(item.dataset.x) || 0;
+    initialY = parseFloat(item.dataset.y) || 0;
 
-    // Store offset where the click occurred inside the cube
-    startX = e.clientX - itemRect.left;
-    startY = e.clientY - itemRect.top;
+    startMouseX = e.clientX;
+    startMouseY = e.clientY;
 
-    // Calculate current position relative to container's content area
-    const currentLeft = itemRect.left - containerRect.left;
-    const currentTop = itemRect.top - containerRect.top;
-
-    // Convert ONLY the clicked item to absolute position so grid stays intact
-    activeItem.style.position = 'absolute';
+    // Bring active item above others without altering grid layout
     activeItem.style.zIndex = '1000';
-    activeItem.style.left = `${currentLeft}px`;
-    activeItem.style.top = `${currentTop}px`;
+    activeItem.style.willChange = 'transform';
   });
 });
 
@@ -37,26 +40,40 @@ document.addEventListener('mousemove', (e) => {
   if (!isDragging || !activeItem) return;
 
   const containerRect = container.getBoundingClientRect();
+  const itemRect = activeItem.getBoundingClientRect();
 
-  // Calculate top/left relative to container border box
-  let left = e.clientX - containerRect.left - startX;
-  let top = e.clientY - containerRect.top - startY;
+  // Mouse movement delta
+  const deltaX = e.clientX - startMouseX;
+  const deltaY = e.clientY - startMouseY;
 
-  // Exact maximum coordinates to prevent spilling outside container bounds
-  const maxLeft = container.clientWidth - activeItem.offsetWidth;
-  const maxTop = container.clientHeight - activeItem.offsetHeight;
+  // Candidate translation positions
+  let targetX = initialX + deltaX;
+  let targetY = initialY + deltaY;
 
-  // Strict boundary clamping
-  left = Math.max(0, Math.min(left, maxLeft));
-  top = Math.max(0, Math.min(top, maxTop));
+  // Calculate current bounds relative to container inner edge
+  const currentLeft = itemRect.left - containerRect.left;
+  const currentTop = itemRect.top - containerRect.top;
+  const currentRight = containerRect.right - itemRect.right;
+  const currentBottom = containerRect.bottom - itemRect.bottom;
 
-  // Apply clamped coordinates
-  activeItem.style.left = `${left}px`;
-  activeItem.style.top = `${top}px`;
+  // Clamp movement so item never exceeds container bounds
+  const minX = targetX - currentLeft;
+  const maxX = targetX + currentRight;
+  const minY = targetY - currentTop;
+  const maxY = targetY + currentBottom;
+
+  currentX = Math.max(minX, Math.min(targetX, maxX));
+  currentY = Math.max(minY, Math.min(targetY, maxY));
+
+  // Apply position smoothly via CSS transform
+  activeItem.style.transform = `translate(${currentX}px, ${currentY}px)`;
 });
 
 document.addEventListener('mouseup', () => {
   if (activeItem) {
+    // Persist position for future drags
+    activeItem.dataset.x = currentX;
+    activeItem.dataset.y = currentY;
     activeItem.style.zIndex = '1';
   }
   isDragging = false;
