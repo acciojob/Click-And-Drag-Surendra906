@@ -4,18 +4,19 @@ const items = document.querySelectorAll('.item');
 let activeItem = null;
 let isDragging = false;
 
-// Initial cursor coordinates when click starts
 let startMouseX = 0;
 let startMouseY = 0;
 
-// Current translation values of active item
-let currentX = 0;
-let currentY = 0;
 let initialX = 0;
 let initialY = 0;
 
+// Store allowable drag ranges relative to initial grid position
+let minAllowedX = 0;
+let maxAllowedX = 0;
+let minAllowedY = 0;
+let maxAllowedY = 0;
+
 items.forEach((item) => {
-  // Store cumulative translation offsets on the element
   item.dataset.x = '0';
   item.dataset.y = '0';
 
@@ -23,14 +24,26 @@ items.forEach((item) => {
     isDragging = true;
     activeItem = item;
 
-    // Read stored translations or default to 0
     initialX = parseFloat(item.dataset.x) || 0;
     initialY = parseFloat(item.dataset.y) || 0;
 
     startMouseX = e.clientX;
     startMouseY = e.clientY;
 
-    // Bring active item above others without altering grid layout
+    const containerRect = container.getBoundingClientRect();
+    const itemRect = item.getBoundingClientRect();
+
+    // Calculate current un-translated position relative to container
+    const un-translatedLeft = (itemRect.left - containerRect.left) - initialX;
+    const un-translatedTop = (itemRect.top - containerRect.top) - initialY;
+
+    // Calculate maximum translation bounds so cube stays completely within [0, clientWidth/Height]
+    minAllowedX = -un-translatedLeft;
+    maxAllowedX = container.clientWidth - item.offsetWidth - un-translatedLeft;
+
+    minAllowedY = -un-translatedTop;
+    maxAllowedY = container.clientHeight - item.offsetHeight - un-translatedTop;
+
     activeItem.style.zIndex = '1000';
     activeItem.style.willChange = 'transform';
   });
@@ -39,41 +52,24 @@ items.forEach((item) => {
 document.addEventListener('mousemove', (e) => {
   if (!isDragging || !activeItem) return;
 
-  const containerRect = container.getBoundingClientRect();
-  const itemRect = activeItem.getBoundingClientRect();
-
-  // Mouse movement delta
   const deltaX = e.clientX - startMouseX;
   const deltaY = e.clientY - startMouseY;
 
-  // Candidate translation positions
+  // Proposed new translate position
   let targetX = initialX + deltaX;
   let targetY = initialY + deltaY;
 
-  // Calculate current bounds relative to container inner edge
-  const currentLeft = itemRect.left - containerRect.left;
-  const currentTop = itemRect.top - containerRect.top;
-  const currentRight = containerRect.right - itemRect.right;
-  const currentBottom = containerRect.bottom - itemRect.bottom;
+  // Strictly clamp inside allowable ranges
+  targetX = Math.max(minAllowedX, Math.min(targetX, maxAllowedX));
+  targetY = Math.max(minAllowedY, Math.min(targetY, maxAllowedY));
 
-  // Clamp movement so item never exceeds container bounds
-  const minX = targetX - currentLeft;
-  const maxX = targetX + currentRight;
-  const minY = targetY - currentTop;
-  const maxY = targetY + currentBottom;
-
-  currentX = Math.max(minX, Math.min(targetX, maxX));
-  currentY = Math.max(minY, Math.min(targetY, maxY));
-
-  // Apply position smoothly via CSS transform
-  activeItem.style.transform = `translate(${currentX}px, ${currentY}px)`;
+  activeItem.dataset.x = targetX;
+  activeItem.dataset.y = targetY;
+  activeItem.style.transform = `translate(${targetX}px, ${targetY}px)`;
 });
 
 document.addEventListener('mouseup', () => {
   if (activeItem) {
-    // Persist position for future drags
-    activeItem.dataset.x = currentX;
-    activeItem.dataset.y = currentY;
     activeItem.style.zIndex = '1';
   }
   isDragging = false;
