@@ -23,8 +23,8 @@ body {
   padding: 100px;
   width: 100%;
   border: 1px solid white;
- display:flex;
-	flex-wrap:wrap;
+  display:grid;
+	grid-template-columns:repeat(auto-fill,minmax(100px,1fr));
 	gap:20px;
   user-select: none;
   cursor: pointer;
