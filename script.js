@@ -10,7 +10,6 @@ let startMouseY = 0;
 let initialX = 0;
 let initialY = 0;
 
-// Store allowable drag ranges relative to initial grid position
 let minAllowedX = 0;
 let maxAllowedX = 0;
 let minAllowedY = 0;
@@ -33,16 +32,17 @@ items.forEach((item) => {
     const containerRect = container.getBoundingClientRect();
     const itemRect = item.getBoundingClientRect();
 
-    // Calculate current un-translated position relative to container
-    const un-translatedLeft = (itemRect.left - containerRect.left) - initialX;
-    const un-translatedTop = (itemRect.top - containerRect.top) - initialY;
+    // 1. Measure current distances from the item edges to container edges
+    const currentLeft = itemRect.left - containerRect.left;
+    const currentTop = itemRect.top - containerRect.top;
+    const currentRight = containerRect.right - itemRect.right;
+    const currentBottom = containerRect.bottom - itemRect.bottom;
 
-    // Calculate maximum translation bounds so cube stays completely within [0, clientWidth/Height]
-    minAllowedX = -un-translatedLeft;
-    maxAllowedX = container.clientWidth - item.offsetWidth - un-translatedLeft;
-
-    minAllowedY = -un-translatedTop;
-    maxAllowedY = container.clientHeight - item.offsetHeight - un-translatedTop;
+    // 2. Compute exact translate limits based on initial position + available room
+    minAllowedX = initialX - currentLeft;
+    maxAllowedX = initialX + currentRight;
+    minAllowedY = initialY - currentTop;
+    maxAllowedY = initialY + currentBottom;
 
     activeItem.style.zIndex = '1000';
     activeItem.style.willChange = 'transform';
@@ -55,11 +55,10 @@ document.addEventListener('mousemove', (e) => {
   const deltaX = e.clientX - startMouseX;
   const deltaY = e.clientY - startMouseY;
 
-  // Proposed new translate position
   let targetX = initialX + deltaX;
   let targetY = initialY + deltaY;
 
-  // Strictly clamp inside allowable ranges
+  // 3. Strictly clamp within allowed boundaries
   targetX = Math.max(minAllowedX, Math.min(targetX, maxAllowedX));
   targetY = Math.max(minAllowedY, Math.min(targetY, maxAllowedY));
 
