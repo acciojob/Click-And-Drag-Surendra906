@@ -14,11 +14,11 @@ items.forEach((item) => {
     const containerRect = container.getBoundingClientRect();
     const itemRect = item.getBoundingClientRect();
 
-    // Store mouse displacement inside the clicked block
+    // 1. Calculate click offset inside the item
     startX = e.clientX - itemRect.left;
     startY = e.clientY - itemRect.top;
 
-    // Convert from CSS grid layout to absolute position on first drag
+    // 2. Convert ONLY the clicked item to absolute positioning on first drag
     if (activeItem.style.position !== 'absolute') {
       const initialLeft = itemRect.left - containerRect.left - container.clientLeft;
       const initialTop = itemRect.top - containerRect.top - container.clientTop;
@@ -39,11 +39,11 @@ document.addEventListener('mousemove', (e) => {
 
   const containerRect = container.getBoundingClientRect();
 
-  // Position relative to container inner padding/border edge
+  // Calculate new coordinates relative to container
   let newLeft = e.clientX - containerRect.left - container.clientLeft - startX;
   let newTop = e.clientY - containerRect.top - container.clientTop - startY;
 
-  // Enforce boundary constraints inside the container
+  // Boundary constraints
   const maxLeft = container.clientWidth - activeItem.offsetWidth;
   const maxTop = container.clientHeight - activeItem.offsetHeight;
 
