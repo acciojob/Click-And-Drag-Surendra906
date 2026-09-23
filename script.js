@@ -34,29 +34,25 @@ document.addEventListener('mousemove', (e) => {
 
   const containerRect = container.getBoundingClientRect();
 
-  // Position relative to container inner top-left area
-  let left = e.clientX - containerRect.left - container.clientLeft - startX;
-  let top = e.clientY - containerRect.top - container.clientTop - startY;
+  // Calculate position relative to container
+  let newLeft = e.clientX - containerRect.left - container.clientLeft - startX;
+  let newTop = e.clientY - containerRect.top - container.clientTop - startY;
 
-  // Exact maximum constraints expected by the test
-  const minLeft = 0;
-  const minTop = 0;
+  // Enforce container boundary constraints
   const maxLeft = container.clientWidth - activeItem.offsetWidth;
   const maxTop = container.clientHeight - activeItem.offsetHeight;
 
-  // Enforce strict clamping
-  left = Math.max(minLeft, Math.min(left, maxLeft));
-  top = Math.max(minTop, Math.min(top, maxTop));
+  newLeft = Math.max(0, Math.min(newLeft, maxLeft));
+  newTop = Math.max(0, Math.min(newTop, maxTop));
 
-  // Set style
-  activeItem.style.left = `${left}px`;
-  activeItem.style.top = `${top}px`;
+  activeItem.style.left = `${newLeft}px`;
+  activeItem.style.top = `${newTop}px`;
 });
 
 document.addEventListener('mouseup', () => {
-  if (activeItem) {
+  if (isDragging && activeItem) {
     activeItem.style.zIndex = '1';
+    isDragging = false;
+    activeItem = null;
   }
-  isDragging = false;
-  activeItem = null;
 });
