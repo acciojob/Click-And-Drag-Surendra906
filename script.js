@@ -3,8 +3,8 @@ const items = document.querySelectorAll('.item');
 
 let activeItem = null;
 let isDragging = false;
-let startX = 0;
-let startY = 0;
+let offsetX = 0;
+let offsetY = 0;
 
 items.forEach((item) => {
   item.addEventListener('mousedown', (e) => {
@@ -14,11 +14,11 @@ items.forEach((item) => {
     const containerRect = container.getBoundingClientRect();
     const itemRect = item.getBoundingClientRect();
 
-    // 1. Calculate click offset inside the item
-    startX = e.clientX - itemRect.left;
-    startY = e.clientY - itemRect.top;
+    // Calculate click offset inside the clicked item
+    offsetX = e.clientX - itemRect.left;
+    offsetY = e.clientY - itemRect.top;
 
-    // 2. Convert ONLY the clicked item to absolute positioning on first drag
+    // Convert item position to absolute inside the container upon first drag
     if (activeItem.style.position !== 'absolute') {
       const initialLeft = itemRect.left - containerRect.left - container.clientLeft;
       const initialTop = itemRect.top - containerRect.top - container.clientTop;
@@ -30,6 +30,7 @@ items.forEach((item) => {
       activeItem.style.height = `${itemRect.height}px`;
     }
 
+    // Bring active item to the front
     activeItem.style.zIndex = '1000';
   });
 });
@@ -39,14 +40,15 @@ document.addEventListener('mousemove', (e) => {
 
   const containerRect = container.getBoundingClientRect();
 
-  // Calculate new coordinates relative to container
-  let newLeft = e.clientX - containerRect.left - container.clientLeft - startX;
-  let newTop = e.clientY - containerRect.top - container.clientTop - startY;
+  // Calculate potential new X and Y coordinates relative to container
+  let newLeft = e.clientX - containerRect.left - container.clientLeft - offsetX;
+  let newTop = e.clientY - containerRect.top - container.clientTop - offsetY;
 
-  // Boundary constraints
+  // Maximum allowed positions within container boundaries
   const maxLeft = container.clientWidth - activeItem.offsetWidth;
   const maxTop = container.clientHeight - activeItem.offsetHeight;
 
+  // Clamp values inside boundaries [0, max]
   newLeft = Math.max(0, Math.min(newLeft, maxLeft));
   newTop = Math.max(0, Math.min(newTop, maxTop));
 
@@ -56,8 +58,8 @@ document.addEventListener('mousemove', (e) => {
 
 document.addEventListener('mouseup', () => {
   if (isDragging && activeItem) {
-    activeItem.style.zIndex = '1';
     isDragging = false;
+    activeItem.style.zIndex = '';
     activeItem = null;
   }
 });
